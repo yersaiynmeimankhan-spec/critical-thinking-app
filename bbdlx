@@ -1,0 +1,248 @@
+import streamlit as st
+import pandas as pd # Кестемен жұмыс істеу үшін
+import time
+
+# 1. Настройка страницы
+st.set_page_config(page_title="Advanced Critical Thinking | Organizer", page_icon="🧠", layout="centered")
+
+# Организатордың арнайы Email-ы (Тест үшін)
+ORGANIZER_EMAIL = "admin@test.com"
+
+# 2. Улучшенный CSS (Sidebar стилін қостық)
+st.markdown("""
+<style>
+    .stApp { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: white; }
+    /* Мәзір стилі (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.9) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    [data-testid="stSidebar"] .stMarkdown h2, [data-testid="stSidebar"] p { color: #00f2fe !important; }
+    
+    .glass-card { 
+        background: rgba(255, 255, 255, 0.05); 
+        backdrop-filter: blur(16px); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 20px; padding: 25px; margin-bottom: 20px; 
+    }
+    .stats-container { 
+        display: flex; justify-content: space-between; 
+        background: rgba(0, 0, 0, 0.3); padding: 15px 20px; 
+        border-radius: 15px; border-left: 4px solid #00f2fe; margin-bottom: 20px; 
+    }
+    .stat-value { font-size: 20px; font-weight: bold; color: #00f2fe; }
+    div.stButton > button { 
+        background-color: rgba(255, 255, 255, 0.07); 
+        color: white !important; border: 1px solid rgba(255, 255, 255, 0.2); 
+        border-radius: 12px; padding: 12px; width: 100%; transition: 0.3s;
+    }
+    div.stButton > button:hover { 
+        border-color: #00f2fe; color: #00f2fe !important; 
+        box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); 
+    }
+    /* Пьедестал стилі */
+    .leaderboard-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .rank-1 { color: #ffd700; font-size: 22px; font-weight: bold; } /* Алтын */
+    .rank-2 { color: #c0c0c0; font-size: 20px; font-weight: bold; } /* Күміс */
+    .rank-3 { color: #cd7f32; font-size: 18px; font-weight: bold; } /* Қола */
+    .user-name { font-size: 18px; font-weight: 500; }
+    .user-score { font-size: 18px; font-weight: bold; color: #00f2fe; }
+</style>
+""", unsafe_allow_html=True)
+
+# 3. Вопросы (2 сұрақ симуляция үшін)
+questions = [
+    {"q": "Қайсысы логикалық қателік?", "options": ["A. Факт", "B. Сабан қарақшы", "C. Зерттеу", "D. Аксиома"], "correct": 1, "exp": "Сабан қарақшы - аргументті бұрмалау."},
+    {"q": "Асығыс қорытынды неге әкеледі?", "options": ["A. Ақиқатқа", "B. Жалған стереотипке", "C. Диалогқа", "D. Зерттеуге"], "correct": 1, "exp": "Аз фактімен үлкен баға беру."}
+]
+
+# 4. Инициализация состояния
+if 'auth' not in st.session_state: st.session_state.auth = False
+if 'user_name' not in st.session_state: st.session_state.user_name = ""
+if 'user_email' not in st.session_state: st.session_state.user_email = ""
+if 'score' not in st.session_state: st.session_state.score = 0
+if 'current_q' not in st.session_state: st.session_state.current_q = 0
+if 'answered' not in st.session_state: st.session_state.answered = False
+if 'is_organizer' not in st.session_state: st.session_state.is_organizer = False
+
+# --- СИМУЛЯЦИЯЛЫҚ ДЕРЕКТЕР ҚОРЫ (Supabase жоқ кезде) ---
+# Бұл тек дизайнын көру үшін! Браузер жабылса, бұл деректер өшеді.
+if 'db_users' not in st.session_state:
+    st.session_state.db_users = pd.DataFrame([
+        {"name": "Асқар Н.", "email": "askar@test.com", "score": 180, "level": 3},
+        {"name": "Динара К.", "email": "dinara@test.com", "score": 150, "level": 2},
+        {"name": "Әлібек Т.", "email": "alibek@test.com", "score": 150, "level": 2},
+        {"name": "Мұрат С.", "email": "murat@test.com", "score": 90, "level": 1},
+        {"name": "Айгүл Ж.", "email": "aigul@test.com", "score": 50, "level": 1},
+    ])
+
+# 5. МӘЗІР (SIDEBAR)
+if st.session_state.auth:
+    st.sidebar.title("🧠 ACT Панелі")
+    st.sidebar.markdown(f"**Ойыншы:** {st.session_state.user_name}")
+    if st.session_state.is_organizer:
+        st.sidebar.success("Организатор режимі 🛠️")
+    st.sidebar.markdown("---")
+    
+    # Мәзір таңдау
+    menu_options = ["Талдау (Тест)", "🏆 Көшбасшылар"]
+    if st.session_state.is_organizer:
+        menu_options.append("⚙️ Админ панель")
+        
+    choice = st.sidebar.selectbox("Бөлімді таңдаңыз:", menu_options)
+    
+    st.sidebar.markdown("---")
+    if st.sidebar.button("Шығу (Logout)"):
+        st.session_state.auth = False
+        st.session_state.is_organizer = False
+        st.session_state.clear()
+        st.rerun()
+
+# --- ЛОГИКА ЭКРАНОВ ---
+
+# ЭКРАН 1: ТІРКЕЛУ
+if not st.session_state.auth:
+    st.markdown("<h1 style='text-align: center;'>Advanced Critical Thinking</h1>", unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.subheader("Кіру / Вход")
+        name = st.text_input("Атыңыз")
+        email = st.text_input("Email (Организатор болсаңыз, admin@test.com қолданыңыз)")
+        if st.button("Кіру"):
+            if name and email:
+                st.session_state.user_name = name
+                st.session_state.user_email = email
+                st.session_state.auth = True
+                # Организатор ма, жоқ па, тексереміз
+                if email == ORGANIZER_EMAIL:
+                    st.session_state.is_organizer = True
+                
+                # Симуляция: Егер бұл жаңа қолданушы болса, "деректер қорына" қосамыз
+                if email not in st.session_state.db_users['email'].values and email != ORGANIZER_EMAIL:
+                     new_user = pd.DataFrame([{"name": name, "email": email, "score": 0, "level": 1}])
+                     st.session_state.db_users = pd.concat([st.session_state.db_users, new_user], ignore_index=True)
+
+                st.rerun()
+            else:
+                st.warning("Өрістерді толтырыңыз!")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# АВТОРИЗАЦИЯДАН ӨТКЕННЕН КЕЙІН
+else:
+    # --- ПАРАҚША: КӨШБАСШЫЛАР (ПЬЕДЕСТАЛ) ---
+    if choice == "🏆 Көшбасшылар":
+        st.markdown("<h2 style='text-align: center;'>🏆 Көшбасшылар тақтасы</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: rgba(255,255,255,0.6);'>Ең үздік 5 ойыншы</p>", unsafe_allow_html=True)
+        
+        # Симуляция деректерін ұпай бойынша сұрыптаймыз (кему ретімен)
+        leaderboard_df = st.session_state.db_users.sort_values(by='score', ascending=False).head(5)
+        
+        with st.container():
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            
+            for i, row in enumerate(leaderboard_df.iterrows()):
+                rank = i + 1
+                data = row[1]
+                
+                rank_class = f"rank-{rank}" if rank <= 3 else ""
+                rank_icon = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}."
+                
+                st.markdown(f'''
+                    <div class="leaderboard-row">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span class="{rank_class}" style="width: 30px; text-align: center;">{rank_icon}</span>
+                            <span class="user-name">{data['name']}</span>
+                        </div>
+                        <span class="user-score">{data['score']} XP</span>
+                    </div>
+                ''', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- ПАРАҚША: АДМИН ПАНЕЛЬ (Тек Организаторға) ---
+    elif choice == "⚙️ Админ панель":
+        st.markdown("<h2>🛠️ Ұйымдастырушы панелі</h2>", unsafe_allow_html=True)
+        st.markdown("<p>Ойынды басқару және барлық қатысушыларды бақылау.</p>", unsafe_allow_html=True)
+        
+        with st.container():
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.subheader("Барлық ойыншылардың тізімі")
+            
+            # Деректерді кесте түрінде көрсетеміз
+            st.dataframe(st.session_state.db_users[['name', 'email', 'score', 'level']], use_container_width=True)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("**Жалпы ойыншылар саны:**", len(st.session_state.db_users))
+            with col2:
+                 target_email = st.text_input("Басқару үшін Email енгізіңіз:")
+
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                if st.button("Ұпайын нөлдеу (Reset)"):
+                    if target_email and target_email in st.session_state.db_users['email'].values:
+                         idx = st.session_state.db_users[st.session_state.db_users['email'] == target_email].index[0]
+                         st.session_state.db_users.at[idx, 'score'] = 0
+                         st.session_state.db_users.at[idx, 'level'] = 1
+                         st.success(f"{target_email} ұпайы нөлденді!")
+                         time.sleep(1)
+                         st.rerun()
+                    else: st.error("Email табылмады!")
+            with c2:
+                if st.button("🚨 Ойыншыны өшіру"):
+                    if target_email and target_email in st.session_state.db_users['email'].values:
+                        st.session_state.db_users = st.session_state.db_users[st.session_state.db_users['email'] != target_email]
+                        st.success(f"{target_email} өшірілді!")
+                        time.sleep(1)
+                        st.rerun()
+                    else: st.error("Email табылмады!")
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- ПАРАҚША: ТЕСТ (Баяғы логика) ---
+    else:
+        st.markdown(f"<h3>Сәлем, {st.session_state.user_name}! Миыңды шынықтыруға дайынсың ба?</h3>", unsafe_allow_html=True)
+        
+        if st.session_state.current_q >= len(questions):
+            st.markdown("<div class='glass-card' style='text-align:center;'><h2>Керемет! Тест аяқталды.</h2></div>", unsafe_allow_html=True)
+            st.stop()
+
+        # Панель
+        st.markdown(f'''
+            <div class="stats-container">
+                <div>Ұпай: <span class="stat-value">{st.session_state.score} XP</span></div>
+                <div>Сұрақ: <span class="stat-value">{st.session_state.current_q + 1}/{len(questions)}</span></div>
+            </div>
+        ''', unsafe_allow_html=True)
+
+        cur = questions[st.session_state.current_q]
+        st.markdown(f'<div class="glass-card"><h3>{cur["q"]}</h3></div>', unsafe_allow_html=True)
+
+        def press_answer(idx):
+            if not st.session_state.answered:
+                st.session_state.answered = True
+                if idx == cur["correct"]:
+                    st.session_state.score += 10
+                    # Симуляция: Деректер қорындағы ұпайын жаңарту
+                    if st.session_state.user_email in st.session_state.db_users['email'].values:
+                         u_idx = st.session_state.db_users[st.session_state.db_users['email'] == st.session_state.user_email].index[0]
+                         st.session_state.db_users.at[u_idx, 'score'] += 10
+                    st.toast("Дұрыс!", icon="✅")
+                else: st.toast("Қате!", icon="❌")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.button(cur["options"][0], on_click=press_answer, args=(0,))
+            st.button(cur["options"][2], on_click=press_answer, args=(2,))
+        with col2:
+            st.button(cur["options"][1], on_click=press_answer, args=(1,))
+            st.button(cur["options"][3], on_click=press_answer, args=(3,))
+
+        if st.session_state.answered:
+            st.info(cur["exp"])
+            if st.button("Келесі сұрақ ➡️"):
+                st.session_state.current_q += 1
+                st.session_state.answered = False
