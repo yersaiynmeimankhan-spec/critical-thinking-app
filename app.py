@@ -4,7 +4,7 @@ import os
 
 st.set_page_config(page_title="TEN Logic Simulator", page_icon="🧠")
 
-# --- 20 СҰРАҚТАР БАЗАСЫ ---
+# --- 20 СҰРАҚТАР БАЗАСЫ (Ағылшыншасы алынды) ---
 questions = [
     {
         "q": "Қымбат фермерлік өнімдерді алатын адамдар ұзақ өмір сүреді. Демек, фермерлік тамақ өмірді ұзартады. Қателік неде?",
@@ -20,8 +20,8 @@ questions = [
     },
     {
         "q": "Сен өзің мектепте математикадан нашар оқығансың, сондықтан сенің экономика туралы айтқаның қате. Қателік неде?",
-        "options": ["Жалған дилемма", "Жеке басқа тиісу (Ad Hominem)", "Эмоцияға жүгіну", "Тұйық шеңбер"],
-        "answer": "Жеке басқа тиісу (Ad Hominem)",
+        "options": ["Жалған дилемма", "Жеке басқа тиісу", "Эмоцияға жүгіну", "Тұйық шеңбер"],
+        "answer": "Жеке басқа тиісу",
         "explanation": "Бұл жерде адамның айтқан аргументіне емес, оның жеке басына немесе өткеніне шабуыл жасалып тұр."
     },
     {
@@ -38,14 +38,14 @@ questions = [
     },
     {
         "q": "Мен экологияны қорғау үшін пластик өндірісін азайту керек дедім. Ал ол 'сен бізді үңгірге апарып, от жағып өмір сүргізгің келеді' деп жауап берді.",
-        "options": ["Сабан қарақшы (Straw Man)", "Тайғақ беткей", "Жалған із", "Эмоцияға жүгіну"],
-        "answer": "Сабан қарақшы (Straw Man)",
+        "options": ["Сабан қарақшы", "Тайғақ беткей", "Жалған із", "Эмоцияға жүгіну"],
+        "answer": "Сабан қарақшы",
         "explanation": "Қарсыластың пікірін әдейі бұрмалап, абсурд дәрежесіне жеткізіп, сосын сол өзі ойлап тапқан бұрмалауға қарсы шығу."
     },
     {
         "q": "Егер оқушыларға сабақта бір рет телефон қарауға рұқсат берсек, ертең олар мектепке диван әкеліп жатып алады.",
-        "options": ["Одан кейін, демек соның кесірінен", "Тайғақ беткей (Slippery Slope)", "Жалған дилемма", "Нағыз шотландық"],
-        "answer": "Тайғақ беткей (Slippery Slope)",
+        "options": ["Одан кейін, демек соның кесірінен", "Тайғақ беткей", "Жалған дилемма", "Нағыз шотландық"],
+        "answer": "Тайғақ беткей",
         "explanation": "Кішкентай ғана әрекет міндетті түрде үлкен апатқа немесе шектен шығушылыққа алып келеді деп қорқыту."
     },
     {
@@ -56,14 +56,14 @@ questions = [
     },
     {
         "q": "Бұл кітаптағы сөздер – абсолютті шындық. Өйткені кітаптың 1-бетінде бұл кітап тек шындықты жазады делінген.",
-        "options": ["Тұйық шеңбер (Circular Reasoning)", "Дәлелдеу жүгін аудару", "Білместікке жүгіну", "Біріктіру қателігі"],
-        "answer": "Тұйық шеңбер (Circular Reasoning)",
+        "options": ["Тұйық шеңбер", "Дәлелдеу жүгін аудару", "Білместікке жүгіну", "Біріктіру қателігі"],
+        "answer": "Тұйық шеңбер",
         "explanation": "Дәлел ретінде дәлелденуі тиіс нәрсенің өзін қолдану."
     },
     {
         "q": "Иә, біздің зауыт өзенді ластап жатқаны рас. Бірақ қараңызшы, біз қаншама адамды жұмыспен қамтамасыз етіп отырмыз!",
-        "options": ["Сабан қарақшы", "Жалған із (Red Herring)", "Эмоцияға жүгіну", "Тайғақ беткей"],
-        "answer": "Жалған із (Red Herring)",
+        "options": ["Сабан қарақшы", "Жалған із", "Эмоцияға жүгіну", "Тайғақ беткей"],
+        "answer": "Жалған із",
         "explanation": "Негізгі мәселеден назарды аудару үшін мүлдем басқа, бірақ эмоция тудыратын тақырыпты ортаға тастау."
     },
     {
@@ -92,8 +92,8 @@ questions = [
     },
     {
         "q": "Ешбір нағыз патриот шетелдің көлігін мінбейді. Егер мінсе, ол нағыз патриот емес.",
-        "options": ["Нағыз шотландық (No True Scotsman)", "Жеке басқа тиісу", "Жалған аналогия", "Авторитетке жүгіну"],
-        "answer": "Нағыз шотландық (No True Scotsman)",
+        "options": ["Нағыз шотландық", "Жеке басқа тиісу", "Жалған аналогия", "Авторитетке жүгіну"],
+        "answer": "Нағыз шотландық",
         "explanation": "Ережені бұзған адамды көріп, өз пікірін өзгертудің орнына, ол адамды 'нағыз' емес деп топтан шығарып тастау."
     },
     {
@@ -137,8 +137,10 @@ if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'q_index' not in st.session_state:
     st.session_state.q_index = 0
-if 'show_explanation' not in st.session_state:
-    st.session_state.show_explanation = False
+if 'answered' not in st.session_state:
+    st.session_state.answered = False
+if 'is_correct' not in st.session_state:
+    st.session_state.is_correct = False
 if 'saved' not in st.session_state:
     st.session_state.saved = False
 
@@ -163,7 +165,7 @@ if st.session_state.is_admin:
     if st.button("Шығу"):
         st.session_state.clear()
         st.rerun()
-    st.stop() # Админ панельден кейін қалған код оқылмайды
+    st.stop() 
 
 # --- РЕГИСТРАЦИЯ БЕТІ ---
 if not st.session_state.registered:
@@ -173,7 +175,6 @@ if not st.session_state.registered:
     email = st.text_input("Электронды поштаңыз (Email):")
 
     if st.button("Бастау 🚀"):
-        # Құпия кілтті тексеру
         if name.lower() == "admin" and email == "ten2026":
             st.session_state.is_admin = True
             st.rerun()
@@ -187,7 +188,6 @@ if not st.session_state.registered:
 
 # --- ОЙЫН БЕТІ ---
 else:
-    # Пьедестал есебі
     score = st.session_state.score
     max_score = len(questions) * 10
     
@@ -205,20 +205,18 @@ else:
     st.sidebar.write(f"⚡ Ұпай: **{score} / {max_score} XP**")
     st.sidebar.progress(min(score / max_score, 1.0))
 
-    # Ойын аяқталғандағы Құттықтау экраны
     if st.session_state.q_index >= len(questions):
         st.success(f"🎉 Құттықтаймыз, {st.session_state.name}! Сіз барлық сұрақтарға жауап бердіңіз.")
         st.write(f"### 🏆 Сенің қорытынды дәрежең: {level}")
         st.write(f"### ⚡ Жинаған ұпайың: {score} XP")
         st.balloons()
         
-        # Нәтижені файлға сақтау
         if not st.session_state.saved:
             file_exists = os.path.exists(FILE_NAME)
             with open(FILE_NAME, mode='a', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Аты", "Email", "Ұпай", "Дәреже"]) # Кесте бас тақырыптары
+                    writer.writerow(["Аты", "Email", "Ұпай", "Дәреже"]) 
                 writer.writerow([st.session_state.name, st.session_state.email, f"{score} XP", level])
             st.session_state.saved = True
 
@@ -226,37 +224,40 @@ else:
             st.session_state.clear()
             st.rerun()
     
-    # Сұрақтар
     else:
         current_q = questions[st.session_state.q_index]
 
         st.write(f"### Сұрақ {st.session_state.q_index + 1} / {len(questions)}:")
         st.info(current_q['q'])
 
-        # Егер қате болса, ДҰРЫС ЖАУАБЫН және түсіндірмесін көрсету
-        if st.session_state.show_explanation:
-            st.error("Қате жауап! 🧐")
-            st.success(f"✅ **Дұрыс жауап:** {current_q['answer']}")
-            st.write("**Неліктен қате? (Түсіндірме):**")
-            st.warning(current_q['explanation'])
+        # Жауап беріп қойғаннан кейінгі көрініс
+        if st.session_state.answered:
+            if st.session_state.is_correct:
+                st.success("✅ Дұрыс жауап! +10 XP 🔥")
+                # Қосымша: дұрыс тапса да, білімін бекіту үшін түсіндірме көрсетеміз
+                st.write("**Түсіндірме:**", current_q['explanation'])
+            else:
+                st.error("❌ Қате жауап! 🧐")
+                st.success(f"✅ **Дұрыс жауап:** {current_q['answer']}")
+                st.warning(f"**Неліктен қате? (Түсіндірме):**\n\n{current_q['explanation']}")
             
             if st.button("Келесі сұраққа өту ➡️"):
-                st.session_state.show_explanation = False
+                st.session_state.answered = False
                 st.session_state.q_index += 1
                 st.rerun()
         
+        # Әлі жауап бермеген кездегі көрініс (радио-батырмалар)
         else:
             choice = st.radio("Жауап нұсқалары:", current_q['options'], index=None)
 
             if st.button("Жауапты тексеру"):
                 if choice:
+                    st.session_state.answered = True
                     if choice == current_q['answer']:
-                        st.success("Дәл таптың! +10 XP 🔥")
+                        st.session_state.is_correct = True
                         st.session_state.score += 10
-                        st.session_state.q_index += 1
-                        st.rerun()
                     else:
-                        st.session_state.show_explanation = True
-                        st.rerun()
+                        st.session_state.is_correct = False
+                    st.rerun()
                 else:
                     st.warning("Жауап нұсқаларының бірін таңдаңыз!")
