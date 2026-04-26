@@ -1,68 +1,52 @@
 import streamlit as st
 
-st.title("🧠 Critical Thinking Simulator")
+# 1. Бет параметрлері
+st.set_page_config(page_title="Critical Thinking", page_icon="🧠", layout="centered")
 
-# Сұрақтар мен нұсқалар базасы
-questions = [
-    {
-        "q": "Қымбат фермерлік өнімдерді алатын адамдар ұзақ өмір сүреді. Демек, фермерлік тамақ өмірді ұзартады. Қателік неде?",
-        "options": [
-            "Асығыс қорытынды жасау", 
-            "Корреляция – себеп емес (correlation does not imply causation)", 
-            "Жалған дилемма", 
-            "Адамның жеке басына тиісу"
-        ],
-        "answer": "Корреляция – себеп емес (correlation does not imply causation)"
-    },
-    {
-        "q": "Барлық аққулар ақ. Демек, қара аққу мүлдем жоқ. Бұл қандай логикалық қателік?",
-        "options": [
-            "Асығыс қорытынды", 
-            "Дәлелдеу жүгін аудару", 
-            "Авторитетке жүгіну", 
-            "Строумен (Қаратұлып) аргументі"
-        ],
-        "answer": "Асығыс қорытынды"
+# 2. CSS стильдері (Бұл код кнопкалар мен мәтінді көрінетін қылады)
+st.markdown("""
+<style>
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        color: white;
     }
-    # Осы жерге қалған 18 сұрақты үтірмен бөліп қоса бересің
-]
+    /* Кнопкалардың дизайны */
+    div.stButton > button {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+    }
+    div.stButton > button:hover {
+        background-color: rgba(0, 242, 254, 0.2) !important;
+        border-color: #00f2fe !important;
+    }
+    /* Мәтін түсі */
+    h1, h2, h3, p { color: white !important; }
+</style>
+""", unsafe_allow_html=True)
 
-if 'score' not in st.session_state:
-    st.session_state.score = 0
-if 'q_index' not in st.session_state:
-    st.session_state.q_index = 0
+# 3. Тесттік бөлім
+st.title("🧠 Логикалық ойлауды дамыту")
+st.write("Сұраққа жауап беріп, өзіңді сынап көр:")
 
-# --- ПЬЕДЕСТАЛ (Деңгейлер) ---
-score = st.session_state.score
-if score < 20:
-    level = "Жаңадан бастаушы 🥉"
-elif score < 40:
-    level = "Танымпаз 🥈"
-elif score < 60:
-    level = "Логика шебері 🥇"
-else:
-    level = "Критикалық ойлау данышпаны 👑"
+# Тесттік сұрақ
+st.subheader("Сұрақ 1: Логикалық тұзақтар")
+st.write("Блогердің пікірінде қандай қателік бар?")
 
-st.write(f"### 🏆 Сенің дәрежең: {level}")
-st.write(f"**Ұпайың:** {score} XP")
-st.progress(min(score / 100, 1.0)) # Прогресс жолағы (100 ұпайға дейін)
-st.markdown("---")
+# Кнопкалар (олар енді көрінетін болады)
+if st.button("A. Тірі қалғандар қателігі"):
+    st.error("Қате!")
+if st.button("B. Табиғатқа жүгіну"):
+    st.error("Қате!")
+if st.button("C. Корреляция мен себеп-салдар"):
+    st.success("Дұрыс! Ұпай қосылды!")
+    if 'score' not in st.session_state: st.session_state.score = 0
+    st.session_state.score += 10
+    st.rerun()
+if st.button("D. Жалған дилемма"):
+    st.error("Қате!")
 
-# --- СҰРАҚ ЖӘНЕ ЖАУАПТАР ---
-current_q = questions[st.session_state.q_index]
-
-st.write(f"### Сұрақ {st.session_state.q_index + 1}:")
-st.info(current_q['q'])
-
-# Жауап нұсқаларын радио-батырмамен шығару
-choice = st.radio("Дұрыс нұсқаны таңда:", current_q['options'])
-
-if st.button("Тексеру"):
-    if choice == current_q['answer']:
-        st.success("Дәл таптың! +10 XP 🔥")
-        st.session_state.score += 10
-        # Келесі сұраққа өту
-        st.session_state.q_index = (st.session_state.q_index + 1) % len(questions)
-        st.rerun()
-    else:
-        st.error("Қате! Тағы бір рет ойланып көрші. 🧐")
+if 'score' in st.session_state:
+    st.write(f"### Сенің ұпайың: {st.session_state.score}")
