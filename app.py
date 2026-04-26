@@ -1,7 +1,8 @@
 import streamlit as st
+import csv
+import os
 
 st.set_page_config(page_title="TEN Logic Simulator", page_icon="🧠")
-st.title("🧠 Critical Thinking Simulator")
 
 # --- 20 СҰРАҚТАР БАЗАСЫ ---
 questions = [
@@ -63,7 +64,7 @@ questions = [
         "q": "Иә, біздің зауыт өзенді ластап жатқаны рас. Бірақ қараңызшы, біз қаншама адамды жұмыспен қамтамасыз етіп отырмыз!",
         "options": ["Сабан қарақшы", "Жалған із (Red Herring)", "Эмоцияға жүгіну", "Тайғақ беткей"],
         "answer": "Жалған із (Red Herring)",
-        "explanation": "Негізгі мәселеден (экология) назарды аудару үшін мүлдем басқа, бірақ эмоция тудыратын тақырыпты (жұмыс орындары) ортаға тастау."
+        "explanation": "Негізгі мәселеден назарды аудару үшін мүлдем басқа, бірақ эмоция тудыратын тақырыпты ортаға тастау."
     },
     {
         "q": "Біздің ата-бабаларымыз ауруды осы шөппен емдеген, сондықтан қазіргі дәрілерден бас тартып, осыны ішу керек.",
@@ -78,7 +79,7 @@ questions = [
         "explanation": "Екі оқиға уақыт бойынша бірінен соң бірі болса, біріншісі міндетті түрде екіншісінің себебі деп қате түсіну."
     },
     {
-        "q": "Ешкім НЛО-ның (ұшатын тәрелкелердің) жоқ екенін дәлелдеген жоқ. Демек, олар бар.",
+        "q": "Ешкім НЛО-ның жоқ екенін дәлелдеген жоқ. Демек, олар бар.",
         "options": ["Білместікке жүгіну", "Жалған дилемма", "Сабан қарақшы", "Дәлелдеу жүгін аудару"],
         "answer": "Білместікке жүгіну",
         "explanation": "Бір нәрсенің жоқ екені дәлелденбесе, ол автоматты түрде бар болып есептелмейді."
@@ -96,65 +97,100 @@ questions = [
         "explanation": "Ережені бұзған адамды көріп, өз пікірін өзгертудің орнына, ол адамды 'нағыз' емес деп топтан шығарып тастау."
     },
     {
-        "q": "Ол емтиханнан құлап қалса, стипендиясынан айырылып, далада қалады. Оған жақсы баға қоя салайықшы.",
+        "q": "Ол емтиханнан құлап қалса, далада қалады. Оған жақсы баға қоя салайықшы.",
         "options": ["Эмоцияға жүгіну", "Жалған із", "Сабан қарақшы", "Тайғақ беткей"],
         "answer": "Эмоцияға жүгіну",
-        "explanation": "Объективті фактілер мен ережелердің орнына аяушылық сияқты сезімдер арқылы шешім қабылдауға итермелеу."
+        "explanation": "Объективті фактілердің орнына аяушылық сияқты сезімдер арқылы шешім қабылдауға итермелеу."
     },
     {
         "q": "Оттегі де, сутегі де жанғыш газ. Демек, олардың қосылысы (H2O - су) да жақсы жанады.",
-        "options": ["Біріктіру қателігі (Fallacy of Composition)", "Асығыс қорытынды", "Жалған аналогия", "Тұйық шеңбер"],
-        "answer": "Біріктіру қателігі (Fallacy of Composition)",
+        "options": ["Біріктіру қателігі", "Асығыс қорытынды", "Жалған аналогия", "Тұйық шеңбер"],
+        "answer": "Біріктіру қателігі",
         "explanation": "Бөліктердің қасиеті міндетті түрде тұтас нәрсенің де қасиеті болады деп қате ойлау."
     },
     {
-        "q": "Экстрасенс 100 болжам айтты, оның 3-еуі дәл келді. 'Міне, ол нағыз көріпкел!' деп соны ғана жариялау.",
-        "options": ["Техас мергені (Texas Sharpshooter)", "Көпшілікке жүгіну", "Дәстүрге жүгіну", "Білместікке жүгіну"],
-        "answer": "Техас мергені (Texas Sharpshooter)",
-        "explanation": "Көптеген мәліметтердің ішінен тек өзіне тиімдісін (дәл келгенін) ғана іріктеп алып, қалған 97 қатені елемеу."
+        "q": "Экстрасенс 100 болжам айтты, 3-еуі дәл келді. 'Міне, ол көріпкел!' деп соны ғана жариялау.",
+        "options": ["Техас мергені", "Көпшілікке жүгіну", "Дәстүрге жүгіну", "Білместікке жүгіну"],
+        "answer": "Техас мергені",
+        "explanation": "Көптеген мәліметтердің ішінен тек өзіне тиімдісін ғана іріктеп алып, қалған қатені елемеу."
     },
     {
-        "q": "Мемлекетті басқару – отбасын басқарғанмен бірдей. Отбасында қатаң әке керек, демек мемлекетке де қатаң диктатор керек.",
-        "options": ["Жалған аналогия", "Жалған дилемма", "Сабан қарақшы", "Одан кейін, демек соның кесірінен"],
+        "q": "Мемлекетті басқару – отбасын басқарғанмен бірдей. Демек қатаң диктатор керек.",
+        "options": ["Жалған аналогия", "Жалған дилемма", "Сабан қарақшы", "Одан кейін..."],
         "answer": "Жалған аналогия",
-        "explanation": "Мүлдем екі түрлі, күрделілік деңгейі басқа ұғымдарды (миллиондаған адам бар мемлекет пен шағын отбасын) бірдей деп қарастыру."
+        "explanation": "Мүлдем екі түрлі, күрделілік деңгейі басқа ұғымдарды бірдей деп қарастыру."
     },
     {
         "q": "Оның бизнесті дамыту туралы идеясы қате, өйткені ол жас кезінде сотты болған.",
         "options": ["Генетикалық қателік", "Нағыз шотландық", "Тұйық шеңбер", "Біріктіру қателігі"],
         "answer": "Генетикалық қателік",
-        "explanation": "Идеяның дұрыс не бұрыстығын идеяның өзіне қарап емес, оның қайдан шыққанына (немесе кім айтқанына) қарап бағалау."
+        "explanation": "Идеяның дұрыс-бұрыстығын идеяның өзіне қарап емес, оның қайдан шыққанына қарап бағалау."
     }
 ]
 
-# --- СЕССИЯНЫ БАСТАУ (ЖАДЫ) ---
+# --- ЖАДЫНЫ БАСТАУ ---
 if 'registered' not in st.session_state:
     st.session_state.registered = False
+if 'is_admin' not in st.session_state:
+    st.session_state.is_admin = False
 if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'q_index' not in st.session_state:
     st.session_state.q_index = 0
 if 'show_explanation' not in st.session_state:
     st.session_state.show_explanation = False
+if 'saved' not in st.session_state:
+    st.session_state.saved = False
 
-# --- 1. РЕГИСТРАЦИЯ БЕТІ ---
+FILE_NAME = "results.csv"
+
+# --- АДМИН ПАНЕЛЬ ---
+if st.session_state.is_admin:
+    st.title("👨‍💻 TEN Басқару Панелі")
+    st.write("Оқушылардың нәтижелері:")
+    
+    if os.path.exists(FILE_NAME):
+        with open(FILE_NAME, "r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            if len(data) > 1:
+                st.table(data)
+            else:
+                st.info("Әзірге ешкім тест тапсырған жоқ.")
+    else:
+        st.info("Әзірге ешкім тест тапсырған жоқ.")
+        
+    if st.button("Шығу"):
+        st.session_state.clear()
+        st.rerun()
+    st.stop() # Админ панельден кейін қалған код оқылмайды
+
+# --- РЕГИСТРАЦИЯ БЕТІ ---
 if not st.session_state.registered:
+    st.title("🧠 Critical Thinking Simulator")
     st.subheader("👋 Қош келдіңіз! Ойынды бастау үшін тіркеліңіз:")
     name = st.text_input("Атыңызды жазыңыз:")
     email = st.text_input("Электронды поштаңыз (Email):")
 
     if st.button("Бастау 🚀"):
-        if name and email:
+        # Құпия кілтті тексеру
+        if name.lower() == "admin" and email == "ten2026":
+            st.session_state.is_admin = True
+            st.rerun()
+        elif name and email:
             st.session_state.name = name
+            st.session_state.email = email
             st.session_state.registered = True
             st.rerun()
         else:
             st.warning("Өтініш, атыңыз бен поштаңызды толық жазыңыз!")
 
-# --- 2. ОЙЫН БЕТІ ---
+# --- ОЙЫН БЕТІ ---
 else:
-    # Пьедесталды сол жақ панельге (sidebar) шығару
+    # Пьедестал есебі
     score = st.session_state.score
+    max_score = len(questions) * 10
+    
     if score < 50:
         level = "Жаңадан бастаушы 🥉"
     elif score < 120:
@@ -166,27 +202,41 @@ else:
 
     st.sidebar.write(f"👤 Ойыншы: **{st.session_state.name}**")
     st.sidebar.write(f"🏆 Дәреже: **{level}**")
-    st.sidebar.write(f"⚡ Ұпай: **{score} XP / 200 XP**")
-    st.sidebar.progress(min(score / 200, 1.0))
+    st.sidebar.write(f"⚡ Ұпай: **{score} / {max_score} XP**")
+    st.sidebar.progress(min(score / max_score, 1.0))
 
-    # Сұрақтар біткенде шығатын қорытынды
+    # Ойын аяқталғандағы Құттықтау экраны
     if st.session_state.q_index >= len(questions):
-        st.success(f"🎉 Құттықтаймыз, {st.session_state.name}! Ойын толық аяқталды.")
+        st.success(f"🎉 Құттықтаймыз, {st.session_state.name}! Сіз барлық сұрақтарға жауап бердіңіз.")
+        st.write(f"### 🏆 Сенің қорытынды дәрежең: {level}")
+        st.write(f"### ⚡ Жинаған ұпайың: {score} XP")
         st.balloons()
-        st.write(f"### Қорытынды ұпай: {score} XP")
+        
+        # Нәтижені файлға сақтау
+        if not st.session_state.saved:
+            file_exists = os.path.exists(FILE_NAME)
+            with open(FILE_NAME, mode='a', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Аты", "Email", "Ұпай", "Дәреже"]) # Кесте бас тақырыптары
+                writer.writerow([st.session_state.name, st.session_state.email, f"{score} XP", level])
+            st.session_state.saved = True
+
         if st.button("Қайта бастау"):
             st.session_state.clear()
             st.rerun()
     
-    # Сұрақтар процесі
+    # Сұрақтар
     else:
         current_q = questions[st.session_state.q_index]
 
         st.write(f"### Сұрақ {st.session_state.q_index + 1} / {len(questions)}:")
         st.info(current_q['q'])
 
+        # Егер қате болса, ДҰРЫС ЖАУАБЫН және түсіндірмесін көрсету
         if st.session_state.show_explanation:
             st.error("Қате жауап! 🧐")
+            st.success(f"✅ **Дұрыс жауап:** {current_q['answer']}")
             st.write("**Неліктен қате? (Түсіндірме):**")
             st.warning(current_q['explanation'])
             
